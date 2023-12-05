@@ -82,14 +82,13 @@ impl AocTask for Day04 {
                     |(total_cards, mut extra_copies), card| {
                         let won_extras = extra_copies.pop_front().unwrap_or(0);
                         let matches = card.matches();
-                        let missing_extras = matches as i32 - extra_copies.len() as i32;
-                        if missing_extras > 0 {
-                            (0..missing_extras).for_each(|_| extra_copies.push_back(0));
-                        }
+                        let missing_extras = matches - matches.min(extra_copies.len());
+
+                        (0..missing_extras).for_each(|_| extra_copies.push_back(won_extras + 1));
 
                         extra_copies
                             .iter_mut()
-                            .take(matches)
+                            .take(matches - missing_extras)
                             .for_each(|extra| *extra += won_extras + 1);
 
                         (total_cards + 1 + won_extras, extra_copies)
