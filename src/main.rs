@@ -1,4 +1,5 @@
 #![feature(lint_reasons)]
+#![feature(result_flattening)]
 #![expect(unused_variables)]
 
 mod day_01;
