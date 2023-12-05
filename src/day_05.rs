@@ -247,24 +247,25 @@ impl Almanac {
             .map(|(id, len)| *id..(id + len))
             .collect();
 
-        let mut mapping_key = &self.first_field;
+        let mut mapping = self.maps.get(&self.first_field).ok_or(format!(
+            "Couldn't find the required mapping: {}",
+            self.first_field
+        ))?;
         loop {
-            let mapping = self
-                .maps
-                .get(mapping_key)
-                .ok_or(format!("Couldn't find the required mapping: {mapping_key}"))?;
-
             let current_range = match ranges_to_map.pop() {
                 Some(range) => range,
                 None => {
-                    // Move on to the next mapping if there are no ranges to map in the current one
-                    std::mem::swap(&mut ranges_to_map, &mut mapped_ranges);
-                    mapping_key = &mapping.to;
-
                     // Finished
-                    if mapping_key == &self.last_field {
+                    if mapping.to == self.last_field {
                         break;
                     }
+
+                    // Move on to the next mapping
+                    std::mem::swap(&mut ranges_to_map, &mut mapped_ranges);
+                    mapping = self.maps.get(&mapping.to).ok_or(format!(
+                        "Couldn't find the required mapping: {}",
+                        mapping.to
+                    ))?;
 
                     continue;
                 }
