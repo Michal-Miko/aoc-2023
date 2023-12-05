@@ -285,7 +285,7 @@ impl Almanac {
                 None => mapped_ranges.push(current_range),
             }
         }
-        Ok(ranges_to_map)
+        Ok(mapped_ranges)
     }
 }
 
