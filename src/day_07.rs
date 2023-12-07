@@ -10,9 +10,9 @@ use aoc_framework::{traits::*, AocSolution, AocStringIter, AocTask};
 use itertools::Itertools;
 use winnow::{
     ascii::{digit1, multispace1},
-    combinator::{repeat, separated_pair},
-    error::{ErrMode, ErrorKind, ParserError},
-    token::take,
+    combinator::{fail, repeat, separated_pair, success},
+    dispatch,
+    token::any,
     PResult, Parser,
 };
 
@@ -145,24 +145,24 @@ impl Ord for Hand {
 }
 
 fn parse_card(input: &mut &str) -> PResult<Card> {
-    let card = take(1usize).parse_next(input)?;
-    match card {
-        "1" => Ok(Card::One),
-        "2" => Ok(Card::Two),
-        "3" => Ok(Card::Three),
-        "4" => Ok(Card::Four),
-        "5" => Ok(Card::Five),
-        "6" => Ok(Card::Six),
-        "7" => Ok(Card::Seven),
-        "8" => Ok(Card::Eight),
-        "9" => Ok(Card::Nine),
-        "T" => Ok(Card::Ten),
-        "J" => Ok(Card::Jack),
-        "Q" => Ok(Card::Queen),
-        "K" => Ok(Card::King),
-        "A" => Ok(Card::Ace),
-        c => Err(ErrMode::from_error_kind(input, ErrorKind::Verify)),
+    dispatch! {any;
+        '1' => success(Card::One),
+        '2' => success(Card::Two),
+        '3' => success(Card::Three),
+        '4' => success(Card::Four),
+        '5' => success(Card::Five),
+        '6' => success(Card::Six),
+        '7' => success(Card::Seven),
+        '8' => success(Card::Eight),
+        '9' => success(Card::Nine),
+        'T' => success(Card::Ten),
+        'J' => success(Card::Jack),
+        'Q' => success(Card::Queen),
+        'K' => success(Card::King),
+        'A' => success(Card::Ace),
+        _ => fail,
     }
+    .parse_next(input)
 }
 
 fn parse_hand(input: &mut &str) -> PResult<Vec<Card>> {
