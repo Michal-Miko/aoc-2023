@@ -71,7 +71,6 @@ impl AocTask for Day06 {
                 let x2_ceil = x2.ceil() as i64;
                 x2_ceil - x1_floor - 1
             })
-            .inspect(|wins| println!("{wins}"))
             .product::<i64>()
             .solved()
     }
