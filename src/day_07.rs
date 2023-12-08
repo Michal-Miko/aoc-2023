@@ -145,7 +145,7 @@ impl Ord for Hand {
 }
 
 fn parse_card(input: &mut &str) -> PResult<Card> {
-    dispatch! {any;
+    dispatch!(any;
         '1' => success(Card::One),
         '2' => success(Card::Two),
         '3' => success(Card::Three),
@@ -161,21 +161,18 @@ fn parse_card(input: &mut &str) -> PResult<Card> {
         'K' => success(Card::King),
         'A' => success(Card::Ace),
         _ => fail,
-    }
+    )
     .parse_next(input)
 }
 
-fn parse_hand(input: &mut &str) -> PResult<Vec<Card>> {
-    repeat(5, parse_card).parse_next(input)
+fn parse_hand(input: &mut &str) -> PResult<Hand> {
+    Ok(Hand(repeat(5, parse_card).parse_next(input)?))
 }
 
 fn parse_bid(input: &mut &str) -> PResult<Bid> {
     let (hand, bid) =
         separated_pair(parse_hand, multispace1, digit1.parse_to::<u32>()).parse_next(input)?;
-    Ok(Bid {
-        hand: Hand(hand),
-        bid,
-    })
+    Ok(Bid { hand, bid })
 }
 
 impl AocTask for Day07 {
