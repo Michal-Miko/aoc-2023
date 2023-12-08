@@ -2,8 +2,12 @@ use std::{collections::VecDeque, path::PathBuf};
 
 use crate::BoxedError;
 use aoc_framework::{traits::*, AocSolution, AocStringIter, AocTask};
-use color_eyre::eyre::Context;
-use itertools::Itertools;
+
+use winnow::{
+    ascii::{digit1, multispace0, multispace1},
+    combinator::{delimited, preceded, separated, separated_pair, terminated},
+    PResult, Parser,
+};
 
 pub struct Day04;
 
@@ -32,6 +36,22 @@ where
     }
 }
 
+fn parse_numbers(input: &mut &str) -> PResult<Vec<i32>> {
+    separated(1.., digit1.parse_to::<i32>(), multispace1).parse_next(input)
+}
+
+fn parse_card(input: &mut &str) -> PResult<(Vec<i32>, Vec<i32>)> {
+    preceded(
+        ("Card", multispace1, digit1, terminated(':', multispace0)),
+        separated_pair(
+            parse_numbers,
+            delimited(multispace0, '|', multispace0),
+            parse_numbers,
+        ),
+    )
+    .parse_next(input)
+}
+
 impl AocTask for Day04 {
     fn directory(&self) -> PathBuf {
         "tasks/day_04".into()
@@ -40,33 +60,7 @@ impl AocTask for Day04 {
     fn solution(&self, input: AocStringIter, phase: usize) -> Result<AocSolution, BoxedError> {
         // Parse cards
         let cards = input
-            .map(|line| {
-                line.split(':')
-                    .last()
-                    .ok_or(format!("Invalid card: {line}").into_boxed_str())
-                    .map(str::to_string)
-            })
-            .map_ok(|numbers| {
-                numbers
-                    .split_once('|')
-                    .map(|(l, r)| (l.to_string(), r.to_string()))
-                    .ok_or(format!("Invalid numbers: {numbers}").into_boxed_str())
-            })
-            .flatten()
-            .map_ok(|(winning, card)| -> Result<_, BoxedError> {
-                Ok((
-                    winning
-                        .split_whitespace()
-                        .map(str::parse)
-                        .collect::<Result<Vec<i32>, _>>()
-                        .context(winning.to_owned())?,
-                    card.split_whitespace()
-                        .map(str::parse)
-                        .collect::<Result<Vec<i32>, _>>()
-                        .context(card.to_owned())?,
-                ))
-            })
-            .flatten()
+            .map(|line| parse_card.parse(&line).map_err(|e| e.to_string()))
             .collect::<Result<Vec<_>, _>>()?;
 
         match phase {
