@@ -3,10 +3,15 @@ use std::path::PathBuf;
 use crate::BoxedError;
 use aoc_framework::{traits::*, AocSolution, AocStringIter, AocTask};
 use itertools::Itertools;
-use thiserror::Error;
+use winnow::{
+    ascii::{alpha1, digit1, multispace0, multispace1},
+    combinator::{dispatch, fail, preceded, separated, separated_pair, success, terminated},
+    PResult, Parser,
+};
 
 pub struct Day02;
 
+#[derive(Clone)]
 enum Cubes {
     Red(usize),
     Green(usize),
@@ -23,54 +28,7 @@ impl Cubes {
     }
 }
 
-#[derive(Debug, Error)]
-enum Task02ParseError {
-    #[error("Failed to parse Cubes: {0}")]
-    Cubes(String),
-
-    #[error("Failed to parse CubeSet: {0}")]
-    CubeSet(String),
-
-    #[error("Failed to parse Game: {0}")]
-    Game(String),
-}
-
-impl TryFrom<&str> for Cubes {
-    type Error = Task02ParseError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let (count, color): (&str, &str) = value
-            .split_whitespace()
-            .collect_tuple()
-            .ok_or(Task02ParseError::Cubes(value.into()))?;
-
-        match (color, count.parse::<usize>()) {
-            ("red", Ok(number)) => Ok(Cubes::Red(number)),
-            ("green", Ok(number)) => Ok(Cubes::Green(number)),
-            ("blue", Ok(number)) => Ok(Cubes::Blue(number)),
-            (_, _) => Err(Task02ParseError::Cubes(value.into())),
-        }
-    }
-}
-
 struct CubeSet(Vec<Cubes>);
-
-impl TryFrom<&str> for CubeSet {
-    type Error = Task02ParseError;
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        let cubes: Vec<Cubes> = value
-            .split(',')
-            .map(|cubes| cubes.trim().try_into())
-            .collect::<Result<_, _>>()?;
-
-        if cubes.is_empty() {
-            Err(Task02ParseError::CubeSet(value.into()))
-        } else {
-            Ok(Self(cubes))
-        }
-    }
-}
 
 struct Game {
     id: usize,
@@ -97,31 +55,34 @@ impl Game {
     }
 }
 
-impl TryFrom<String> for Game {
-    type Error = Task02ParseError;
+fn parse_cubes(input: &mut &str) -> PResult<Cubes> {
+    dispatch!(
+        separated_pair(digit1.parse_to::<usize>(), multispace1, alpha1);
+        (count, "red") => success(Cubes::Red(count)),
+        (count, "green") => success(Cubes::Green(count)),
+        (count, "blue") => success(Cubes::Blue(count)),
+        _ => fail,
+    )
+    .parse_next(input)
+}
 
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        let (id_string, cube_sets_string) = value
-            .split(':')
-            .collect_tuple()
-            .ok_or(Task02ParseError::Game(value.clone()))?;
+fn parse_cubeset(input: &mut &str) -> PResult<CubeSet> {
+    let cube_set = separated(1.., parse_cubes, terminated(',', multispace0)).parse_next(input)?;
+    Ok(CubeSet(cube_set))
+}
 
-        let id: usize = id_string
-            .replace("Game ", "")
-            .parse()
-            .map_err(|_| Task02ParseError::Game(id_string.into()))?;
+fn parse_game(input: &mut &str) -> PResult<Game> {
+    let (id, cube_sets) = preceded(
+        ("Game", multispace1),
+        separated_pair(
+            digit1.parse_to::<usize>(),
+            terminated(':', multispace0),
+            separated(1.., parse_cubeset, terminated(';', multispace0)),
+        ),
+    )
+    .parse_next(input)?;
 
-        let cube_sets: Vec<CubeSet> = cube_sets_string
-            .split(';')
-            .map(|cube_set| cube_set.trim().try_into())
-            .collect::<Result<_, _>>()?;
-
-        if cube_sets.is_empty() {
-            Err(Task02ParseError::Game(cube_sets_string.into()))
-        } else {
-            Ok(Self { id, cube_sets })
-        }
-    }
+    Ok(Game { id, cube_sets })
 }
 
 impl AocTask for Day02 {
@@ -130,7 +91,7 @@ impl AocTask for Day02 {
     }
 
     fn solution(&self, input: AocStringIter, phase: usize) -> Result<AocSolution, BoxedError> {
-        let games = input.map(Game::try_from);
+        let games = input.map(|line| parse_game.parse(&line).map_err(|e| e.to_string()));
         match phase {
             1 => games
                 .filter_ok(Game::cubes_under_limits)
