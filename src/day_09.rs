@@ -20,13 +20,13 @@ enum ExtrapolationKind {
 #[derive(Debug, Clone)]
 struct History {
     data: Vec<i32>,
-    extrapolated: Vec<Vec<i32>>,
+    derived: Vec<Vec<i32>>,
 }
 
 impl Display for History {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "{:?}", self.data)?;
-        for row in &self.extrapolated {
+        for row in &self.derived {
             writeln!(f, "{:?}", row)?;
         }
         Ok(())
@@ -38,7 +38,7 @@ impl History {
     fn new(data: Vec<i32>) -> History {
         History {
             data,
-            extrapolated: vec![],
+            derived: vec![],
         }
         .derived()
     }
@@ -50,15 +50,15 @@ impl History {
             for (first, second) in current.iter().tuple_windows() {
                 next.push(second - first);
             }
-            self.extrapolated.push(next);
-            current = &self.extrapolated.last().expect("Empty history");
+            self.derived.push(next);
+            current = &self.derived.last().expect("Empty history");
         }
-        self.extrapolated.push(vec![0; current.len() - 1]);
+        self.derived.push(vec![0; current.len() - 1]);
         self
     }
 
     fn extrapolated(mut self, kind: ExtrapolationKind) -> History {
-        let mut rows = once(&mut self.data).chain(&mut self.extrapolated).rev();
+        let mut rows = once(&mut self.data).chain(&mut self.derived).rev();
         rows.next().expect("Empty history").push(0);
 
         let mut seed = 0;
@@ -123,14 +123,14 @@ mod test {
     fn single_number_history() {
         let history = History::new(vec![5]);
         assert_eq!(history.data, vec![5]);
-        assert_eq!(history.extrapolated, vec![vec![]]);
+        assert_eq!(history.derived, vec![vec![]]);
 
         let forwards_extrapolated = history.clone().extrapolated(ExtrapolationKind::Forwards);
         assert_eq!(forwards_extrapolated.data, vec![5, 5]);
-        assert_eq!(forwards_extrapolated.extrapolated, vec![vec![0]]);
+        assert_eq!(forwards_extrapolated.derived, vec![vec![0]]);
 
         let backwards_extrapolated = history.clone().extrapolated(ExtrapolationKind::Backwards);
         assert_eq!(backwards_extrapolated.data, vec![5, 5]);
-        assert_eq!(backwards_extrapolated.extrapolated, vec![vec![0]]);
+        assert_eq!(backwards_extrapolated.derived, vec![vec![0]]);
     }
 }
