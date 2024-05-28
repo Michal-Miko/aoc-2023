@@ -10,7 +10,7 @@ use aoc_framework::{traits::*, AocSolution, AocStringIter, AocTask};
 use itertools::Itertools;
 use winnow::{
     ascii::{digit1, multispace1},
-    combinator::{fail, repeat, separated_pair, success},
+    combinator::{empty, fail, repeat, separated_pair},
     dispatch,
     token::any,
     PResult, Parser,
@@ -146,20 +146,20 @@ impl Ord for Hand {
 
 fn parse_card(input: &mut &str) -> PResult<Card> {
     dispatch!(any;
-        '1' => success(Card::One),
-        '2' => success(Card::Two),
-        '3' => success(Card::Three),
-        '4' => success(Card::Four),
-        '5' => success(Card::Five),
-        '6' => success(Card::Six),
-        '7' => success(Card::Seven),
-        '8' => success(Card::Eight),
-        '9' => success(Card::Nine),
-        'T' => success(Card::Ten),
-        'J' => success(Card::Jack),
-        'Q' => success(Card::Queen),
-        'K' => success(Card::King),
-        'A' => success(Card::Ace),
+        '1' => empty.value(Card::One),
+        '2' => empty.value(Card::Two),
+        '3' => empty.value(Card::Three),
+        '4' => empty.value(Card::Four),
+        '5' => empty.value(Card::Five),
+        '6' => empty.value(Card::Six),
+        '7' => empty.value(Card::Seven),
+        '8' => empty.value(Card::Eight),
+        '9' => empty.value(Card::Nine),
+        'T' => empty.value(Card::Ten),
+        'J' => empty.value(Card::Jack),
+        'Q' => empty.value(Card::Queen),
+        'K' => empty.value(Card::King),
+        'A' => empty.value(Card::Ace),
         _ => fail,
     )
     .parse_next(input)

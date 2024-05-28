@@ -5,7 +5,7 @@ use aoc_framework::{traits::*, AocSolution, AocStringIter, AocTask};
 use itertools::Itertools;
 use winnow::{
     ascii::{alpha0, digit1},
-    combinator::{alt, delimited, peek, repeat, repeat_till0, terminated},
+    combinator::{alt, delimited, peek, repeat, repeat_till, terminated},
     token::{any, take},
     PResult, Parser,
 };
@@ -31,7 +31,7 @@ fn parse_digit_take_1(input: &mut &str) -> PResult<u32> {
 }
 
 fn parse_digit_with_prefix(input: &mut &str) -> PResult<u32> {
-    repeat_till0(any, parse_digit_take_1)
+    repeat_till(0.., any, parse_digit_take_1)
         .map(|(_, digit): (Vec<_>, u32)| digit)
         .parse_next(input)
 }

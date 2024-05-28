@@ -10,6 +10,6 @@ aoc-framework = { git = "https://github.com/Michal-Miko/aoc-framework.git", tag 
 color-eyre = "0.6.2"
 itertools = "0.12.1"
 lazy_static = "1.4.0"
-winnow = "0.6.5"
 regex = "1.10.3"
 thiserror = "1.0.57"
+winnow = "0.6.8"
