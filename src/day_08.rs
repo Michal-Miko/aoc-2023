@@ -107,6 +107,7 @@ where
     Self: Sized,
 {
     fn prime_factors(&self) -> HashMap<Self, Self>;
+    #[allow(dead_code)]
     fn lcm(&self, other: &Self) -> Self;
 }
 
@@ -138,7 +139,7 @@ impl Lcm for usize {
         if self == &0usize && self == other {
             0
         } else {
-            vec![*self, *other].lcm()
+            [*self, *other].lcm()
         }
     }
 }
@@ -162,7 +163,7 @@ where
                 HashMap::<usize, usize>::new(),
                 |mut acc, (factor, power)| {
                     acc.entry(factor)
-                        .and_modify(|max_power| *max_power = (*max_power).max(power))
+                        .and_modify(|max_power| *max_power = power.max(*max_power))
                         .or_insert(power);
                     acc
                 },
