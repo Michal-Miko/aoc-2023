@@ -5,7 +5,7 @@ use aoc_framework::{traits::*, AocSolution, AocStringIter, AocTask};
 use itertools::Itertools;
 use winnow::{
     ascii::{alpha1, digit1, multispace0, multispace1},
-    combinator::{dispatch, fail, preceded, separated, separated_pair, success, terminated},
+    combinator::{dispatch, empty, fail, preceded, separated, separated_pair, terminated},
     PResult, Parser,
 };
 
@@ -58,9 +58,9 @@ impl Game {
 fn parse_cubes(input: &mut &str) -> PResult<Cubes> {
     dispatch!(
         separated_pair(digit1.parse_to::<usize>(), multispace1, alpha1);
-        (count, "red") => success(Cubes::Red(count)),
-        (count, "green") => success(Cubes::Green(count)),
-        (count, "blue") => success(Cubes::Blue(count)),
+        (count, "red") => empty.value(Cubes::Red(count)),
+        (count, "green") => empty.value(Cubes::Green(count)),
+        (count, "blue") => empty.value(Cubes::Blue(count)),
         _ => fail,
     )
     .parse_next(input)

@@ -4,7 +4,7 @@ use crate::BoxedError;
 use aoc_framework::{traits::*, AocSolution, AocStringIter, AocTask};
 use winnow::{
     ascii::{alphanumeric1, multispace0},
-    combinator::{delimited, fail, repeat, separated_pair, success},
+    combinator::{delimited, empty, fail, repeat, separated_pair},
     dispatch,
     token::any,
     PResult, Parser,
@@ -76,8 +76,8 @@ fn parse_path(input: &mut &str) -> PResult<Path> {
     let instructions: Vec<Instruction> = repeat(
         1..,
         dispatch!(any;
-            'L' => success(Instruction::Left),
-            'R' => success(Instruction::Right),
+            'L' => empty.value(Instruction::Left),
+            'R' => empty.value(Instruction::Right),
             _ => fail,
         ),
     )
