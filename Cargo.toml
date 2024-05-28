@@ -6,7 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-aoc-framework = { git = "https://github.com/Michal-Miko/aoc-framework.git", tag = "0.8.2", version = "0.8.2" }
+aoc-framework = { git = "https://github.com/Michal-Miko/aoc-framework.git", tag = "0.8.3", version = "0.8.3" }
 color-eyre = "0.6.2"
 itertools = "0.12.1"
 lazy_static = "1.4.0"
