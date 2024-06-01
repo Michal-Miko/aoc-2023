@@ -1,5 +1,5 @@
 use std::{
-    collections::{hash_map::Entry, HashMap},
+    collections::{hash_map::Entry, HashMap, VecDeque},
     fmt::Display,
     ops::{Add, Sub},
     path::PathBuf,
@@ -180,35 +180,17 @@ impl Field {
     }
 
     fn compute_distances(&mut self) {
+        // (tile, distance from start)
+        let mut tiles_to_visit = VecDeque::from([(self.start, 0)]);
         self.distances.insert(self.start, 0);
 
-        let mut current_tiles = vec![self.start];
-        let mut next_tiles = vec![];
-
-        let mut step = 1;
-        loop {
-            loop {
-                if current_tiles.is_empty() {
-                    break;
-                }
-
-                let pos = current_tiles.pop().unwrap();
-                let connected_tiles = self.connections_at(&pos);
-
-                for tile in connected_tiles {
-                    if let Entry::Vacant(e) = self.distances.entry(tile) {
-                        e.insert(step);
-                        next_tiles.push(tile);
-                    }
+        while let Some((pos, distance)) = tiles_to_visit.pop_front() {
+            for tile in self.connections_at(&pos) {
+                if let Entry::Vacant(e) = self.distances.entry(tile) {
+                    e.insert(distance + 1);
+                    tiles_to_visit.push_back((tile, distance + 1));
                 }
             }
-
-            if next_tiles.is_empty() {
-                break;
-            }
-
-            std::mem::swap(&mut current_tiles, &mut next_tiles);
-            step += 1;
         }
     }
 
@@ -247,7 +229,7 @@ impl Field {
         let mut edges = 0;
         let mut new = *pos + dir;
         let mut last_tile = &Tile::Ground;
-        while new.x >= 0 && new.y >= 0 && new.x < self.width && new.y < self.height {
+        while new.x >= 0 {
             let tile = self.tile_at(&new);
             // If two corners form a diagonoal, ignore the 2nd corner and count them as 1 wall
             if !last_tile.forms_left_diagonal_with(tile)

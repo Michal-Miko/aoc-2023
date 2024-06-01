@@ -260,9 +260,10 @@ impl AocTask for Day12 {
             1 => records
                 .map_ok(|record| record.compute_arrangements_dfa())
                 .process_results(|iter| iter.sum::<usize>()),
-            _ => records
+            2 => records
                 .map_ok(|record| record.multiply_by(5).compute_arrangements_dfa())
                 .process_results(|iter| iter.sum::<usize>()),
+            _ => unimplemented!(),
         }
         .try_solved()
     }
