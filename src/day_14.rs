@@ -36,21 +36,22 @@ impl Platform {
     }
 
     fn settle(&mut self, dir: &SettleDir) {
-        let slice = match dir {
-            SettleDir::North => |idx| s![0.., idx],
-            SettleDir::East => |idx| s![idx, 0..;-1],
-            SettleDir::South => |idx| s![0..;-1, idx],
-            SettleDir::West => |idx| s![idx, 0..],
+        let slice = |idx| match dir {
+            SettleDir::North => s![0.., idx],
+            SettleDir::East => s![idx, 0..;-1],
+            SettleDir::South => s![0..;-1, idx],
+            SettleDir::West => s![idx, 0..],
         };
 
+        // Platforms are square
         for idx in 0..self.data.dim().0 {
-            let mut col = self.data.slice_mut(slice(idx));
+            let mut row = self.data.slice_mut(slice(idx));
             let mut free_spot = 0;
-            for y in 0..col.dim() {
-                match col[y] {
+            for y in 0..row.dim() {
+                match row[y] {
                     '.' => {}
                     'O' if y != free_spot => {
-                        col.swap(y, free_spot);
+                        row.swap(y, free_spot);
                         free_spot += 1
                     }
                     '#' => free_spot = y + 1,
