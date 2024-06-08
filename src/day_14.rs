@@ -25,10 +25,11 @@ impl Platform {
 
         let array = Array2::from_shape_vec(
             (width, height),
-            data.into_iter().fold(vec![], |mut acc, s| {
-                acc.extend(s.chars());
-                acc
-            }),
+            data.into_iter()
+                .fold(Vec::with_capacity(width * height), |mut acc, s| {
+                    acc.extend(s.chars());
+                    acc
+                }),
         )
         .expect("Input should be valid");
 
